@@ -6,13 +6,14 @@
 from malhar import FuzzyIndex
 import os
 
+# choose any directory like "D://movies"
 filenames = os.listdir(".")
 
 # initialize
 db = FuzzyIndex(name = "filesearch")
 
 # populate
-for i,name in filenames:
+for i,name in enumerate(filenames):
     db.update(key = i, data = name)  # keep key unique, to later retrieve original content.
 
 # display stats.
