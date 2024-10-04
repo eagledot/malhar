@@ -1,0 +1,6 @@
+include perl2python.pl
+include ChangeLog
+include LICENSE
+include README.rst
+include tox.ini
+recursive-include tests *.py
