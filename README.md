@@ -1,5 +1,15 @@
-# A basic example:
 
+Installation:
+-----------
+```cmd
+git clone https://github.com/eageldot/malhar
+
+cd malhar  # change directory to root of clone repository
+
+pip install .   # build and install package
+```
+
+# A basic example:
 ```python
 # an example to index filenames from a directory.
 
