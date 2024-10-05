@@ -1,7 +1,7 @@
 
 Installation:
 -----------
-```cmd
+```
 git clone https://github.com/eageldot/malhar
 
 cd malhar  # change directory to root of clone repository
