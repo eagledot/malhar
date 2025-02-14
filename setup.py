@@ -10,7 +10,7 @@ def get_long_description():
 
 setup(
     name='Malhar',
-    version='0.0.1',
+    version='0.0.2',
     description='Fuzzy Search Index',
     license='Apache 2.0',
     long_description=get_long_description(),
