@@ -1,3 +1,3 @@
-from .fuzzydatabase import FuzzyIndex
+from .search_malhar import MalharSearch
 
-__all__ = [FuzzyIndex]
+__all__ = [MalharSearch]
