@@ -13,36 +13,40 @@ pip install .   # build and install package
 ```python
 # an example to index filenames from a directory.
 
-from malhar import FuzzyIndex
+from malhar import MalharSearch
 import os
 
 # choose any directory like "D://movies"
 filenames = os.listdir(".")
 
 # initialize
-db = FuzzyIndex(name = "filesearch")
+db = MalharSearch(capacity = 100_000) # capacity could be set based on your needs/dataset-diversity, by default is set to 1 Million.
 
 # populate
 for i,name in enumerate(filenames):
-    db.update(key = i, data = name)  # keep key unique, to later retrieve original content.
+    db.append(document_id = i, content = name)  # keep key unique, to later retrieve original content.
 
-# display stats.
-print(db)
+# some stats!
+print(db.get_count())        # unique number of tokens
 
 # query
-def show_results(query:str):
-    top_k = 10
-    pkey_scores = db.query(query)    # returned sorted results..
-    for pkey, _ in pkey_scores[:top_k]:
-        print(filenames[pkey])
+query = "m4p"            
+db.query(query, top_k = 100)  # NOTE: you will note that, for each result, `document` field would be None, and it refers the original content. If you want to return the original document too. Please take a look below.
+# 
 
+# provide your own routine to also return the corresponding original_document, if needed!
+def my_document(document_id:int, **kwargs):    # use this signature!
+    return files[document_id]          # replace it with get_from_dataset(document_id,..)  or get_from_s3_storage(document_id,...) based on your needs!
 
-# save the index, for later retrieval.
-db.save("./filemeta.json")
+## either set it directly, since python's functions are first class objects.
+db.get_document = my_document
 
-# load the saved index.
-db_new = FuzzyIndex(file_path = "./filemeta.json")
-print(db_new)
+## Classic way, by subclassing parent Class.
+class FileSearch(MalharSearch):
+    def get_document(document_id:int, **kwargs):
+        return files[document_id]
+db = FileSearch(capacity .....)
+...
 
 ```
 
