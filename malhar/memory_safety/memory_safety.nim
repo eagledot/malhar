@@ -34,3 +34,17 @@ type
 
 proc `=copy`(dst: var BookKeeping, src: BookKeeping){.error.}
 # proc `=sink`(dst: var BookKeeping, src: BookKeeping){.error.}
+
+
+proc initBookKeeping*(size:Natural = 1024):BookKeeping=
+    # size: i.e initially can keep track of size number of active allocations at any point of time during execution of programme!
+    result = default(BookKeeping)
+    result.recordPointers = cast[ptr UncheckedArray[pointer]](c_malloc((size * sizeof(pointer)).csize_t))
+    result.records = cast[ptr UncheckedArray[Record]](c_malloc((size * sizeof(Record)).csize_t))
+    result.capacity = size
+
+    # default initialization!
+    for i in 0..<size:
+        result.recordPointers[i] = nil  # nil would mean a record is not present yet!
+    for i in 0..<size:
+        result.records[i] = default(Record)
