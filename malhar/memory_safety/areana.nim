@@ -41,3 +41,8 @@ template isBlockInitializedImpl(block_ptr_t:ptr Block):bool=
 template getBlockAvailableMemoryImpl(allocator_t:ArenaAllocator, block_ix_t:Natural):Natural = 
     doAssert isBlockInitializedImpl(allocator_t, block_ix_t), "cannot be nil, not intialized yet??"
     allocator_t.blocks[block_ix_t].capacity - allocator_t.blocks[block_ix_t].size
+
+proc isRightMostRecord(x:ArenaAllocator, block_idx:Natural, record_pointer:pointer, record_size:Natural):bool=
+    # TODO: double check this logic!
+    # NOTE: not supposed to be dependent on any bookkeeping api!
+    return (cast[int](record_pointer)) + record_size == (cast[int](x.blocks[block_idx].memory)) + x.blocks[block_idx].size
