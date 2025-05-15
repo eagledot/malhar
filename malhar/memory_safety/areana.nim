@@ -46,3 +46,12 @@ proc isRightMostRecord(x:ArenaAllocator, block_idx:Natural, record_pointer:point
     # TODO: double check this logic!
     # NOTE: not supposed to be dependent on any bookkeeping api!
     return (cast[int](record_pointer)) + record_size == (cast[int](x.blocks[block_idx].memory)) + x.blocks[block_idx].size
+
+proc freeBlock(allocator: var ArenaAllocator, block_idx:Natural)=
+    # free this block to the os and reset block meta-data!
+    let mem_to_free = allocator.blocks[block_idx].memory
+    doAssert not isNil(mem_to_free)
+    c_free(mem_to_free) # os/libC call!
+    # reset state.
+    reset(allocator.blocks[block_idx])
+    assert isNil(allocator.blocks[block_idx].memory)
