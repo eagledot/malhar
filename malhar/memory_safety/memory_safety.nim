@@ -31,3 +31,6 @@ type
         # synced.. bases pointer mapping to records
         recordPointers:ptr UncheckedArray[pointer]
         records:ptr UncheckedArray[Record]
+
+proc `=copy`(dst: var BookKeeping, src: BookKeeping){.error.}
+# proc `=sink`(dst: var BookKeeping, src: BookKeeping){.error.}
