@@ -104,3 +104,35 @@ template getLiveCountImpl(record_pointer_t:ptr Record):Natural=
     for i in 0..<64: # SIMD opportunity.. (supposed to be called during decRefCount.. we check all the references slots even never filled to not save more meta-data. But called rarely so ok!)
         ref_counter_t += (record_pointer_t.references[i].status == live).Natural
     ref_counter_t
+
+
+proc addRecord(x:var BookKeeping, record_pointer:pointer, record_size:Natural, record_payload:Natural):uint8 = 
+    # Add a new record (of allocation) in a given block_idx!
+
+    var (flag, record_idx) = x.getRecordIndex(record_pointer, record_payload = record_payload)
+    doAssert flag == false, "must not have been found, (valid) record_pointer + record_payload is supposed to be unique!"
+    
+    # find a slot to add this new record!
+    var found = false
+    record_idx = 0
+    for i in 0..<64:
+        if isNil(x.recordPointers[i]):
+            record_idx = i
+            found = true
+            break
+    doAssert found == true, "Not enough capacity?"
+
+    x.recordPointers[record_idx] = record_pointer
+    
+    x.records[record_idx].payload = record_payload # basically a unique value each time a record is added, guarantees payload would be unique even if pointer can be repeated!
+    x.records[record_idx].ownerRefId = -1   # by default starts as reader!
+    x.records[record_idx].size = record_size
+    x.records[record_idx].writerCount = 0   # fresh record, still to be written !
+    
+    x.records[record_idx].references[0] = default(Reference)
+    x.records[record_idx].references[0].status = live # 0 will be foremost live reference by default on new record addition!
+    x.records[record_idx].references[0].threadId = getThreadId() # corresponding threadId where it was created. some operations may force thread matching..
+    x.records[record_idx].references[0].writerCount = 0     # new record, nothing has been written to it.
+
+    return 0'u8 # return the reference assigned!
+    
