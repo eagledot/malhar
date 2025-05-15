@@ -130,3 +130,63 @@ proc getBlockIndex(allocator:var ArenaAllocator, record_pointer:pointer, record_
                 break
     doAssert found == true, "must have been found!"
     return block_idx
+
+proc deallocRecord*(allocator:var ArenaAllocator, record_pointer:pointer, record_size:Natural, reference_id:uint8, record_payload:Natural, now:bool = false,
+    debugFile: string,
+    debugLine: int,
+    )=
+    # NOTE: i think for now , we cannot detect, if it is called twice with same info.
+    # if record freed was somewher in b/w block..
+    
+    # De-allocate a record/allocation, supposed to be called when all references to a Data-structure becomes zero.
+    # supposed to be called by finalizer for *all* the allocations that Data-structure has access to or during `realloc` like stuff!
+    # must also be called manually, for transparently called `allocRecord`.
+
+    #------------------------
+    # Deallocation strategy :
+    # ----------------------
+    # on finding the exact block, a record belongs, then
+    # if that records was most-recent/rightMost.. then we decrement the size of block.. indication reuse of memory for next allocation in the block!
+    # if that record was last one.. we return the whole Block if that block is *not* largest one
+    # idea about not releasing largest Block is that..
+    # if at the end of programme, it will soon be deallocated anyway!
+    # but if not.. and programme further need more memory, then that memory would potentially come from this block !
+
+
+    # ------- BookKeeping stuff -------------------------------
+    allocator.bookkeeper.removeRecord(record_pointer, record_payload = record_payload, now = now, debugFile = debugFile, debugLine = debugLine)
+    # ------------------------------------------------------------
+
+    # --------------------------------------
+    # Allocator Stuff 
+    # ---------------------------------------
+    # first find the block index, this base is part of.. (we don't save this info as book-keeping and allocator are supposed to be modular/independent)
+    # so we find this using logic below:
+    
+    let block_idx = allocator.getBlockIndex(
+        record_pointer = record_pointer,
+        record_size = record_size,
+        reference_id = reference_id) # find the block_idx where this record belongs to!
+
+    # free any other potential Block (every dealloc call is the opportunity..)
+    let largest_block_idx = allocator.getLargestBlockIdx() # largest active block!
+    for i in 0..<16:
+        let block_ptr = addr allocator.blocks[i]
+        if isBlockInitializedImpl(block_ptr): # some thing block_ptr 
+            if block_ptr.n_records == 0 and (i != largest_block_idx) and (i != block_idx):
+                allocator.freeBlock(i)
+                echo "\t[INFO]: Returned to OS for block: ", i, " largest: ", block_idx
+
+    if allocator.blocks[block_idx].n_records == 1: # last record which is being deactivated/removed!
+        # this was the last record, this block can be returned to OS. (we return it if *is not* the larget Block. )
+        if largest_block_idx != block_idx:
+            allocator.freeBlock(block_idx)
+        else:
+            allocator.blocks[block_idx].size = 0 # just reduce the size, indicating full block is available!
+    elif allocator.isRightMostRecord(block_idx, record_pointer = record_pointer, record_size = record_size):
+        # else check if this was the most recent record?, if yes we can effectively just free that record only !
+        allocator.blocks[block_idx].size -= record_size # decrement the bumpCOunter!
+    else:
+        discard
+    
+    allocator.blocks[block_idx].n_records -= 1
