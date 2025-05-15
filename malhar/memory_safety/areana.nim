@@ -15,3 +15,5 @@ type
         capacity:Natural 
         size:Natural  # current size (< capacity) for this block.
         memory:pointer
+proc `=copy`(a:var Block, b:Block){.error.}
+proc `=sink`(a:var Block, b:Block){.error.}
