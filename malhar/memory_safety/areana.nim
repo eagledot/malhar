@@ -64,3 +64,26 @@ proc getStartingBlockIndex(n_bytes:Natural):Natural {.inline.} =
         let cap = pow(2'f32, i.float32)  # TODO: use look-up table to replace pow routine/call..
         if cap >= temp:
             return i
+
+proc allocateBlock(allocator: var ArenaAllocator, n_bytes:Natural, zeroin:bool):Natural =
+    # allocate a new block, by finding first non-initialized block with enough capacity!
+    var block_idx = getStartingBlockIndex(n_bytes)
+    var was_found = false
+    for i in block_idx..<16:
+        if allocator.isBlockInitializedImpl(block_idx) == false:
+            was_found = true
+            block_idx = i
+            break
+    doAssert was_found == true
+    
+    ## initialize it. (each block has a fixed capacity, given its index)
+    if block_idx >= 12:
+        echo "[Warning] Too much memory for a single allocation???"
+    let cap = pow(2, block_idx.float32).uint * (1024 * 1024) # since fixed 16, can replace pow with a look-table!
+    allocator.blocks[block_idx].memory = c_malloc(cap.csize_t) # may crash if too much requested!
+    allocator.blocks[block_idx].capacity = cap
+    allocator.blocks[block_idx].size = 0
+    if zeroin:
+        c_memset(allocator.blocks[block_idx].memory, 0, cap.csize_t)
+
+    return block_idx
