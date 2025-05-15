@@ -87,3 +87,13 @@ proc allocateBlock(allocator: var ArenaAllocator, n_bytes:Natural, zeroin:bool):
         c_memset(allocator.blocks[block_idx].memory, 0, cap.csize_t)
 
     return block_idx
+
+proc allocate_from_block(allocator:var ArenaAllocator, block_idx:Natural, n_bytes:Natural):pointer=
+    # allocate a new record from a (initialized) block.
+    assert allocator.getBlockAvailableMemoryImpl(block_idx) >= (n_bytes)
+    let block_ptr = addr allocator.blocks[block_idx]
+    result = cast[pointer](cast[int](block_ptr.memory) + block_ptr.size)
+    
+    block_ptr.size += n_bytes # increment the bumpCounter!
+    block_ptr.n_records += 1
+    return result
