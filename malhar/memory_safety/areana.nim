@@ -135,23 +135,6 @@ proc deallocRecord*(allocator:var ArenaAllocator, record_pointer:pointer, record
     debugFile: string,
     debugLine: int,
     )=
-    # NOTE: i think for now , we cannot detect, if it is called twice with same info.
-    # if record freed was somewher in b/w block..
-    
-    # De-allocate a record/allocation, supposed to be called when all references to a Data-structure becomes zero.
-    # supposed to be called by finalizer for *all* the allocations that Data-structure has access to or during `realloc` like stuff!
-    # must also be called manually, for transparently called `allocRecord`.
-
-    #------------------------
-    # Deallocation strategy :
-    # ----------------------
-    # on finding the exact block, a record belongs, then
-    # if that records was most-recent/rightMost.. then we decrement the size of block.. indication reuse of memory for next allocation in the block!
-    # if that record was last one.. we return the whole Block if that block is *not* largest one
-    # idea about not releasing largest Block is that..
-    # if at the end of programme, it will soon be deallocated anyway!
-    # but if not.. and programme further need more memory, then that memory would potentially come from this block !
-
 
     # ------- BookKeeping stuff -------------------------------
     allocator.bookkeeper.removeRecord(record_pointer, record_payload = record_payload, now = now, debugFile = debugFile, debugLine = debugLine)
@@ -160,8 +143,6 @@ proc deallocRecord*(allocator:var ArenaAllocator, record_pointer:pointer, record
     # --------------------------------------
     # Allocator Stuff 
     # ---------------------------------------
-    # first find the block index, this base is part of.. (we don't save this info as book-keeping and allocator are supposed to be modular/independent)
-    # so we find this using logic below:
     
     let block_idx = allocator.getBlockIndex(
         record_pointer = record_pointer,
@@ -190,3 +171,4 @@ proc deallocRecord*(allocator:var ArenaAllocator, record_pointer:pointer, record
         discard
     
     allocator.blocks[block_idx].n_records -= 1
+
