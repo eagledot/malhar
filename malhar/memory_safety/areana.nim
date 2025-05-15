@@ -32,3 +32,8 @@ proc initAllocator*():ArenaAllocator =
     result = default(ArenaAllocator)
     result.bookkeeper = initBookKeeping(size = 1024)
     return result
+
+template isBlockInitializedImpl(allocator_t:ArenaAllocator, block_ix_t:Natural):bool=
+    not isNil(allocator_t.blocks[block_ix_t].memory)
+template isBlockInitializedImpl(block_ptr_t:ptr Block):bool=
+    not isNil(block_ptr_t.memory)
