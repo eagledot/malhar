@@ -201,3 +201,32 @@ proc removeRecord(x:var BookKeeping, record_pointer:pointer, record_payload:Natu
     x.recordPointers[record_idx] = nil 
     x.records[record_idx] = default(Record) # can do away with this, since record_pointer we set to nil. 
     echo "\t[INFO]: record invalidated for: ", $(cast[int](record_pointer))
+
+
+# -----------------------------------------
+#   Reference couting APIs:
+# -----------------------------------------
+proc incRefCount*(x: var BookKeeping, record_pointer:pointer, reference_id:uint8, record_payload:Natural):uint8 = 
+    # each copy/assignment operation is supposed to increment the reference count
+    
+    let (flag, record_idx) = x.checkValidReference(record_pointer, reference_id = reference_id, record_payload = record_payload)
+    if flag == false:
+        echo "\t[FATAL]: Parent reference Id:  ", reference_id, " For record is not valid anymore: ", $cast[int](record_pointer)
+        prison.debugInvalidation(record_pointer, reference_id = reference_id, record_payload = record_payload)
+    doAssert flag == true
+
+    # find an unused/dead reference-id to be assigned!
+    var assigned_reference_id = 0
+    var found = false
+    for i in 0..<64:
+        if x.records[record_idx].references[i].status == dead:
+            assigned_reference_id = i
+            found = true
+            break
+    doAssert found == true and assigned_reference_id.uint8 != reference_id, "Maximum 64 live references could be there for a DS !"
+
+    x.records[record_idx].references[assigned_reference_id].status = live
+    x.records[record_idx].references[assigned_reference_id].threadId = getThreadId()
+    x.records[record_idx].references[assigned_reference_id].writerCount = x.records[record_idx].writerCount   # assign current writeCount, so as to later know if memory has been manipulated by another reference!
+    assert assigned_reference_id <= high(uint8).int
+    return assigned_reference_id.uint8
