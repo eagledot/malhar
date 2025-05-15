@@ -14,3 +14,10 @@ type
         reference_id:uint8
         record_payload:Natural     # payload associated to distinguish record_pointers, as they could be reused!
         reason:prisonReason
+
+# append only..
+type
+    Prison = object
+        len:Natural = 0
+        capacity:Natural = 0
+        records:ptr UncheckedArray[PrisonRecord]
