@@ -43,3 +43,9 @@ proc findRecord(x:Prison, record_pointer:pointer, reference_id:uint8, record_pay
         return (true, x.records[found_ix].reason)
     else:
         return (false, ReleasedDuringAssignment)
+
+proc sendToPrison*(p: var Prison, record_pointer:pointer, reference_id:uint8, record_payload:Natural, reason:prisonReason)=
+    p.records[p.len].record_pointer = record_pointer
+    p.records[p.len].reference_id = reference_id
+    p.records[p.len].record_payload = record_payload
+    inc p.len
