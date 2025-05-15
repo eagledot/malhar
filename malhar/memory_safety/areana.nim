@@ -27,3 +27,8 @@ type
 
 proc `=copy`(a:var ArenaAllocator, b: ArenaAllocator){.error.}
 proc `=sink`(a:var ArenaAllocator, b: ArenaAllocator){.error.}
+
+proc initAllocator*():ArenaAllocator =
+    result = default(ArenaAllocator)
+    result.bookkeeper = initBookKeeping(size = 1024)
+    return result
