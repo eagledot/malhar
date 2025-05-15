@@ -114,3 +114,19 @@ proc getBlocksCount(allocator: ArenaAllocator):Natural =
         result += (allocator.isBlockInitializedImpl(i)).int
     return result
 
+proc getBlockIndex(allocator:var ArenaAllocator, record_pointer:pointer, record_size:Natural, reference_id:uint8):Natural =
+    # given user stored record info, we can find which block it belongs to!
+    
+    var block_idx = 0
+    var found = false
+    for i in 0..<16:
+        if allocator.isBlockInitializedImpl(i):
+            let x_0 = cast[int](record_pointer)
+            let x_1 = cast[int](allocator.blocks[i].memory)
+            let cap = cast[int](allocator.blocks[i].capacity)
+            if x_0 >= x_1 and (x_0 + record_size) <= (x_1 + cap): # must reside inside a block!
+                block_idx = i
+                found = true
+                break
+    doAssert found == true, "must have been found!"
+    return block_idx
