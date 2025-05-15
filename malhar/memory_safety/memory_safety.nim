@@ -230,3 +230,18 @@ proc incRefCount*(x: var BookKeeping, record_pointer:pointer, reference_id:uint8
     x.records[record_idx].references[assigned_reference_id].writerCount = x.records[record_idx].writerCount   # assign current writeCount, so as to later know if memory has been manipulated by another reference!
     assert assigned_reference_id <= high(uint8).int
     return assigned_reference_id.uint8
+
+proc decRefCount*(x: var BookKeeping, record_pointer:pointer, reference_id:uint8, record_payload:Natural):Natural=
+    # Returns the number of live (not dead) references remaining to this record!
+
+    let (flag, record_idx) = x.checkValidReference(record_pointer = record_pointer, reference_id = reference_id, record_payload = record_payload)
+    if flag == false:
+        echo "\t[FATAL]: Parent reference Id:  ", reference_id, " For record is not valid anymore: ", $cast[int](record_pointer)
+        prison.debugInvalidation(record_pointer, reference_id = reference_id, record_payload = record_payload)
+
+    doAssert flag == true
+    x.records[record_idx].references[reference_id.Natural].status = dead
+    x.records[record_idx].references[reference_id.Natural].threadId = -1
+    return getLiveCountImpl(addr x.records[record_idx]) # number of live/active references remaining for this record!
+
+# -----------------------------------------------------------------------------
