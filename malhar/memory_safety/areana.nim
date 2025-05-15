@@ -172,3 +172,47 @@ proc deallocRecord*(allocator:var ArenaAllocator, record_pointer:pointer, record
     
     allocator.blocks[block_idx].n_records -= 1
 
+proc allocRecord*(allocator: var ArenaAllocator, n_bytes:Natural, zeroin:bool = false):tuple[record_pointer:pointer, record_size:Natural, reference_id:uint8, record_payload:Natural] =
+    # Allocate a new Record.
+    assert n_bytes > 0
+
+    # -----------------------------------------------------
+    #  Allocator stuff 
+    # -------------------------------------------------------
+
+    # finding the compatible block, first check if enough space available in an already allocated block!
+    var block_idx = getStartingBlockIndex(n_bytes)
+    var found_already_init = false
+    for i in block_idx..<16:
+        if allocator.isBlockInitializedImpl(block_idx) == false:
+            continue
+        if allocator.getBlockAvailableMemoryImpl(block_idx) >= n_bytes:
+            found_already_init = true
+            block_idx = i
+            break
+
+    if found_already_init == false:
+        block_idx = allocator.allocateBlock(n_bytes, zeroin) # allocate a fresh (Arena) block
+        echo "\t[INFO]: allocated From OS for block: ", block_idx
+
+    let record_pointer = allocator.allocate_from_block(block_idx, n_bytes) # allocate from it!
+    # ----------------------------------------------------------------------------
+
+    result.record_pointer = record_pointer
+    result.record_size = n_bytes
+    result.reference_id = 0 # as a new records, so first reference is 0!
+    result.record_payload = record_counter # even if a record pointer in re-used, we should be able to distinguish it!
+
+    # ------------------------------------
+    # -- BookKeeping stuff...
+    # ----------------------------------------------
+    result.reference_id = allocator.bookkeeper.addRecord(
+            record_pointer = record_pointer,
+            record_size = n_bytes,
+            record_payload = record_counter)
+    doAssert result.reference_id == 0, "Since new record, so foremost reference must be zero"
+    # -----------------------------------------------------
+    
+    inc record_counter
+    return result
+
