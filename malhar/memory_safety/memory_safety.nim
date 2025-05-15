@@ -53,3 +53,21 @@ proc freeBookKeeping(x:BookKeeping)=
     # TODO: may be make sure no record is valid anymore.. to be sure..
     c_free(x.records)
     c_free(x.recordPointers)
+
+proc getRecordIndex(x:BookKeeping, record_pointer:pointer, record_payload:Natural):tuple[flag:bool, record_idx:int] =
+    # given a record pointer, get its index in the records array!
+    # NOTE: flag must be checked if a valid record was found in the first place.
+
+    doAssert not isNil(record_pointer)
+    for i in 0..<64:
+        let to_check = x.recordPointers[i]
+        if isNil(to_check):
+            continue
+        if to_check == record_pointer and (record_payload == x.records[i].payload):
+            result.flag = true
+            result.record_idx = i
+            return result
+    
+    result.flag = false
+    result.record_idx = -1
+    return result
