@@ -114,6 +114,22 @@ template getLiveCountImpl(record_pointer_t:ptr Record):Natural=
 include ./debugging_safety
 var prison* = initPrison() # global scope
 
+proc removeReferenceForcefully*(x:var BookKeeping, 
+    record_pointer:pointer, 
+    reference_id:uint8, 
+    record_payload:Natural,
+    reason:prisonReason  # a reason has to be provided, for removing a reference forcefully!
+    )=
+    # remove an existing reference out-of-turn. For `realloc` like operations, we will need to prevent access to `reallocated memory` by some stale references/stack-data. 
+    # NOTE: Error message during `proveReadAccess` and `proveWriteAccess` may not be useful, as it would just indicate `invalidAccess`. (probably enumerate the possibly reasons clearly!) 
+
+    let (flag, record_idx) = x.checkValidReference(record_pointer, reference_id = reference_id, record_payload = record_payload)
+    doAssert flag == true
+    x.records[record_idx].references[reference_id.Natural].status = dead
+    
+    # send this record + payload to prison. so later we can debug!
+    prison.sendToPrison(record_pointer, reference_id, record_payload, reason) # what is the reason , have to be provided!
+
 # ------------------------------------------------------------------------------------------
 
 
