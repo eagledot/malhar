@@ -24,3 +24,6 @@ type
         blocks:array[16, Block] # [1mb, 2mb, 4mb, ...]
         # book-keeping (optional/modular, to (try to) prevent memory-safety bugs!)
         bookkeeper*:BookKeeping
+
+proc `=copy`(a:var ArenaAllocator, b: ArenaAllocator){.error.}
+proc `=sink`(a:var ArenaAllocator, b: ArenaAllocator){.error.}
