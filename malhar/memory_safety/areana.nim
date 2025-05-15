@@ -37,3 +37,7 @@ template isBlockInitializedImpl(allocator_t:ArenaAllocator, block_ix_t:Natural):
     not isNil(allocator_t.blocks[block_ix_t].memory)
 template isBlockInitializedImpl(block_ptr_t:ptr Block):bool=
     not isNil(block_ptr_t.memory)
+
+template getBlockAvailableMemoryImpl(allocator_t:ArenaAllocator, block_ix_t:Natural):Natural = 
+    doAssert isBlockInitializedImpl(allocator_t, block_ix_t), "cannot be nil, not intialized yet??"
+    allocator_t.blocks[block_ix_t].capacity - allocator_t.blocks[block_ix_t].size
