@@ -24,3 +24,10 @@ type
         ownerRefId:int = -1  # -1 means, no writer, other wise ix in [0-63] indicating which reference is a writer!                          
         writerCount:int = 0  # to maintain the number of times this record/memory has been manipulated!
         references:array[64, Reference]  # each record is allowed upto 64 live reference for now!
+
+type
+    BookKeeping* = object
+        capacity:int    # possible capacity!
+        # synced.. bases pointer mapping to records
+        recordPointers:ptr UncheckedArray[pointer]
+        records:ptr UncheckedArray[Record]
