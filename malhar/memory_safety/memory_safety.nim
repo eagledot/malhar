@@ -130,6 +130,21 @@ proc removeReferenceForcefully*(x:var BookKeeping,
     # send this record + payload to prison. so later we can debug!
     prison.sendToPrison(record_pointer, reference_id, record_payload, reason) # what is the reason , have to be provided!
 
+proc removeAllReferencesForcefully*(x:var BookKeeping,
+    record_pointer:pointer, 
+    record_payload:Natural,
+    reason:prisonReason
+)=
+    let (flag, record_idx) = x.getRecordIndex(record_pointer, record_payload = record_payload)
+    for i in 0..<64:
+        if x.records[record_idx].references[i.Natural].status == live:
+            x.removeReferenceForcefully(
+                record_pointer, 
+                reference_id = i.uint8,
+                record_payload = record_payload,
+                reason = reason
+            )
+
 # ------------------------------------------------------------------------------------------
 
 
