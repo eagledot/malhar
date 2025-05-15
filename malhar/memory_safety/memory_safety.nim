@@ -15,3 +15,12 @@ type
         writerCount:int = -1  # it can be used to check if memory has been manipulated in-directly.
         expectMutation:bool = false  # by default, all references expect underlying memory to be frozen, at the time of their creation.
         threadId:int
+
+# A record represents a Memory allocation by the allocator. We intend to keep necessary meta-data for each such record to enable memory-safety!
+type
+    Record = object  # combination of base pointer and reference id is unique enough !
+        size:Natural
+        payload:Natural  # to distinguish b/w record pointers, since those could be reused. want to prove that some reference/stack-data may not refer to `re-assigned record-pointer` during `alloc to ds1 - dealloc from ds1 -alloc to ds2`. rare but could happen. Using extra payload can prevent it! 
+        ownerRefId:int = -1  # -1 means, no writer, other wise ix in [0-63] indicating which reference is a writer!                          
+        writerCount:int = 0  # to maintain the number of times this record/memory has been manipulated!
+        references:array[64, Reference]  # each record is allowed upto 64 live reference for now!
