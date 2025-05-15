@@ -93,3 +93,7 @@ proc checkValidReference(x:BookKeeping, record_pointer:pointer, reference_id:uin
         result.flag = false
         result.record_idx = -1
     return result
+
+proc isValidReference*(x:BookKeeping, record_pointer:pointer, reference_id:uint8, record_payload:Natural):bool =
+    let (flag, record_idx) = x.checkValidReference(record_pointer, reference_id, record_payload)
+    return flag
