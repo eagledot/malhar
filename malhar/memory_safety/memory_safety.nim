@@ -48,3 +48,8 @@ proc initBookKeeping*(size:Natural = 1024):BookKeeping=
         result.recordPointers[i] = nil  # nil would mean a record is not present yet!
     for i in 0..<size:
         result.records[i] = default(Record)
+
+proc freeBookKeeping(x:BookKeeping)=
+    # TODO: may be make sure no record is valid anymore.. to be sure..
+    c_free(x.records)
+    c_free(x.recordPointers)
