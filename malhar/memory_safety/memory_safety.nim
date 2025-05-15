@@ -106,6 +106,17 @@ template getLiveCountImpl(record_pointer_t:ptr Record):Natural=
     ref_counter_t
 
 
+# ---------------------------------------------------------------------------------------
+# Out of turn (indirect) references removal from book-keeping due to operations like `realloc`, `moving to a new Thread`, `pre-emptive deallocation`.
+# This will make stack-data stale/corrupted.
+# We can detect such corrupted data now, and plan to introduce nice debug messages when read or write is tried by such stack-data/stack-references!  
+# --------------------------------------------------------------------------------------------
+include ./debugging_safety
+var prison* = initPrison() # global scope
+
+# ------------------------------------------------------------------------------------------
+
+
 proc addRecord(x:var BookKeeping, record_pointer:pointer, record_size:Natural, record_payload:Natural):uint8 = 
     # Add a new record (of allocation) in a given block_idx!
 
@@ -135,4 +146,27 @@ proc addRecord(x:var BookKeeping, record_pointer:pointer, record_size:Natural, r
     x.records[record_idx].references[0].writerCount = 0     # new record, nothing has been written to it.
 
     return 0'u8 # return the reference assigned!
-    
+
+proc removeRecord(x:var BookKeeping, record_pointer:pointer, record_payload:Natural, now:bool = false, debugFile:string, debugLine:int)=
+    # removes an existing Record. TODO: rename it to removeRecord! 
+    let (flag, record_idx) = x.getRecordIndex(record_pointer, record_payload)
+    if flag == false:
+        echo "\t[FATAL]: Cannot remove a non-existent record: ", $(cast[int](record_pointer)), " Did you try to double free, or bad reference counting logic!"
+    doAssert flag == true
+
+    let live_count = getLiveCountImpl(addr x.records[record_idx])
+    if now == true:
+
+        # debugging/prison records!
+        x.removeAllReferencesForcefully(
+          record_pointer = record_pointer,
+          record_payload = record_payload,
+          reason = PreemptiveDeallocation  
+        )  # pre-emptive deallocation, without scope exists. (later memoy safety will prevent all later access to this memory/record from stale references)      
+    else:
+        doAssert live_count == 0, "This must have been the last active (not dead) reference, but found: " & $live_count
+
+    # For now no need to specifically set references to default.. setting record pointer to nil is enough!  
+    x.recordPointers[record_idx] = nil 
+    x.records[record_idx] = default(Record) # can do away with this, since record_pointer we set to nil. 
+    echo "\t[INFO]: record invalidated for: ", $(cast[int](record_pointer))
