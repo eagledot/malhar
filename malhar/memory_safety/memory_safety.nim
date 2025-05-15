@@ -97,3 +97,10 @@ proc checkValidReference(x:BookKeeping, record_pointer:pointer, reference_id:uin
 proc isValidReference*(x:BookKeeping, record_pointer:pointer, reference_id:uint8, record_payload:Natural):bool =
     let (flag, record_idx) = x.checkValidReference(record_pointer, reference_id, record_payload)
     return flag
+
+template getLiveCountImpl(record_pointer_t:ptr Record):Natural=
+    # Counts the number of live references to this record!
+    var ref_counter_t:Natural = 0
+    for i in 0..<64: # SIMD opportunity.. (supposed to be called during decRefCount.. we check all the references slots even never filled to not save more meta-data. But called rarely so ok!)
+        ref_counter_t += (record_pointer_t.references[i].status == live).Natural
+    ref_counter_t
