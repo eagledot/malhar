@@ -71,3 +71,25 @@ proc getRecordIndex(x:BookKeeping, record_pointer:pointer, record_payload:Natura
     result.flag = false
     result.record_idx = -1
     return result
+
+proc checkValidReference(x:BookKeeping, record_pointer:pointer, reference_id:uint8, record_payload:Natural):tuple[flag:bool, record_idx:int] {.inline.} =
+    # Returns the (valid) record index in book-keeping, if exists. otherwise flag would be false, indicating invalid/dead reference!
+
+    var (flag, record_idx) = x.getRecordIndex(record_pointer, record_payload)
+    if flag == false:
+        result.flag = false
+        result.record_idx = -1
+        return result
+
+    var cond_1 = (x.records[record_idx].references[reference_id.Natural].status == live)
+    var cond_2  = (x.records[record_idx].payload == record_payload)
+    if cond_1 == true and cond_2 == false:
+        echo "\t[INFO]: This should be rare, it means same record-pointer exists in book-keeping, but different payload. This points to a scenario where a reference was removed during reallocation, and just deallocated memory-space was given to a new Data-structure! Calling debugInvalidation(info) should help!"
+    
+    if cond_1 and cond_2:
+        result.flag = true
+        result.record_idx = record_idx
+    else:
+        result.flag = false
+        result.record_idx = -1
+    return result
