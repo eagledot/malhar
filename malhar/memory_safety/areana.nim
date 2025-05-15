@@ -97,3 +97,13 @@ proc allocate_from_block(allocator:var ArenaAllocator, block_idx:Natural, n_byte
     block_ptr.size += n_bytes # increment the bumpCounter!
     block_ptr.n_records += 1
     return result
+
+proc getLargestBlockIdx(allocator: ArenaAllocator):Natural {.inline.} =
+    # rather than storing meta-data, we can just scan!
+    result = 0
+    for i in 0..<16:
+        # TODO: use 0 rather than nil, to speed up various computations..but later!
+        if allocator.isBlockInitializedImpl(i): # branching can be removed... 
+            result = i # if we use 0 in-place of Nil , then very (fast) simple calculation!
+    assert allocator.isBlockInitializedImpl(result) == true, "Expected to be initialized..  if calling this routine"
+    return result    
