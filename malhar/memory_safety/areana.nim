@@ -216,3 +216,7 @@ proc allocRecord*(allocator: var ArenaAllocator, n_bytes:Natural, zeroin:bool = 
     inc record_counter
     return result
 
+proc allocRecord0(allocator: var ArenaAllocator, n_bytes:Natural):tuple[record_pointer:pointer, record_size:Natural, reference_id:uint8, record_payload:Natural] {.inline.}=
+    # also zero-in the memory !
+    return allocRecord(allocator, n_bytes, zeroin = true)
+
