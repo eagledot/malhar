@@ -107,3 +107,10 @@ proc getLargestBlockIdx(allocator: ArenaAllocator):Natural {.inline.} =
             result = i # if we use 0 in-place of Nil , then very (fast) simple calculation!
     assert allocator.isBlockInitializedImpl(result) == true, "Expected to be initialized..  if calling this routine"
     return result    
+
+proc getBlocksCount(allocator: ArenaAllocator):Natural =
+    result = 0
+    for i in 0..<16: # TOdo: may be unroll!
+        result += (allocator.isBlockInitializedImpl(i)).int
+    return result
+
