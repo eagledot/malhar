@@ -24,3 +24,9 @@ type
 
 proc `=copy`(a: var Prison, b:Prison){.error.}
 proc `=sink`(a: var Prison, b:Prison){.error.}
+
+proc initPrison*(size:Natural = 2048):Prison=
+    result.capacity = size
+    result.len = 0
+    result.records = cast[ptr UncheckedArray[PrisonRecord]](c_malloc((sizeof(PrisonRecord) * size).csize_t))
+    return result
