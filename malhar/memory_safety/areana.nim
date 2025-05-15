@@ -55,3 +55,12 @@ proc freeBlock(allocator: var ArenaAllocator, block_idx:Natural)=
     # reset state.
     reset(allocator.blocks[block_idx])
     assert isNil(allocator.blocks[block_idx].memory)
+
+proc getStartingBlockIndex(n_bytes:Natural):Natural {.inline.} =
+    # may be directly get index, as each block has a capacity of 2 of index ?
+    
+    let temp = ((n_bytes.float32 / (1024 * 1024).float32) + 0.1) # push at-boundaries allocation to a much larger block!
+    for i in 0..<16:
+        let cap = pow(2'f32, i.float32)  # TODO: use look-up table to replace pow routine/call..
+        if cap >= temp:
+            return i
