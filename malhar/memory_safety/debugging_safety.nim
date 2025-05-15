@@ -30,3 +30,16 @@ proc initPrison*(size:Natural = 2048):Prison=
     result.len = 0
     result.records = cast[ptr UncheckedArray[PrisonRecord]](c_malloc((sizeof(PrisonRecord) * size).csize_t))
     return result
+
+proc findRecord(x:Prison, record_pointer:pointer, reference_id:uint8, record_payload:Natural):tuple[flag:bool, reason:prisonReason]=
+    var found_ix = -1
+
+    # we scan all, find the latest reason for incarceration!
+    for i in 0..<x.len:
+        if x.records[i].record_pointer == record_pointer and  x.records[i].record_payload == record_payload and (x.records[i].reference_id == reference_id):
+            found_ix = i
+    if found_ix >= 0:
+        doAssert x.records[found_ix].reason != ReleasedDuringAssignment # it is kind of a dummy reason, cannot be reason a read/write is prevented!
+        return (true, x.records[found_ix].reason)
+    else:
+        return (false, ReleasedDuringAssignment)
