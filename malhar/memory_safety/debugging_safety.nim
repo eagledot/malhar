@@ -49,3 +49,12 @@ proc sendToPrison*(p: var Prison, record_pointer:pointer, reference_id:uint8, re
     p.records[p.len].reference_id = reference_id
     p.records[p.len].record_payload = record_payload
     inc p.len
+
+proc debugValidation(x: Prison, record_pointer:pointer, reference_id:uint8, record_payload:Natural)=
+    # in case reference was valid!
+    # like proving this is a fresh reference.
+
+    let (found, reason) = x.findRecord(record_pointer, reference_id, record_payload)    
+    if found == true:
+        quit("[INFO]: Validation failed, Must not have happened.. bug somewhere!")
+    echo "[INFO]: Stack data is Fresh, no-signs for staleness!"
