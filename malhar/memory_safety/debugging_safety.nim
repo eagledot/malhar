@@ -21,3 +21,6 @@ type
         len:Natural = 0
         capacity:Natural = 0
         records:ptr UncheckedArray[PrisonRecord]
+
+proc `=copy`(a: var Prison, b:Prison){.error.}
+proc `=sink`(a: var Prison, b:Prison){.error.}
