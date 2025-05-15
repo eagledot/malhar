@@ -58,3 +58,22 @@ proc debugValidation(x: Prison, record_pointer:pointer, reference_id:uint8, reco
     if found == true:
         quit("[INFO]: Validation failed, Must not have happened.. bug somewhere!")
     echo "[INFO]: Stack data is Fresh, no-signs for staleness!"
+
+proc debugInvalidation*(x:Prison, record_pointer:pointer, reference_id:uint8, record_payload:Natural)=
+    # try to prove invalidation reason!
+    
+    let(found, reason) = x.findRecord(record_pointer, reference_id, record_payload)
+    doAssert found == true, "Could not prove invalidation"
+
+    case reason
+    of PreemptiveDeallocation:
+        echo "\t[REASON]: Pre-emptive deallocation by user somewhere, using now = true!"
+    of ReleasedDuringAssignment:
+        # NOTE: this is generally not found as reason, as it is during `copy/assignment` phase!
+        discard
+    of MovedToThreadByUser:
+        echo "\t[INFO]: Somewhere you in different thread called the MoveToAThread, right? If not file a bug!"
+    of ReallocationHappenedInOtherThread:
+        echo "\t[INFO]: you made it an owner/writer in some different thread..and then tried to add elements to it beyond its capacity, which triggered a reallocation!"
+    of ReallocationHappenedInThisThread:
+        echo "\t[INFO]: you tried to add elements to it beyond the initial capacity, which triggered a reallocation in this thread!"
