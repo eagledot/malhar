@@ -43,3 +43,11 @@ proc add_record*(record_pointer:pointer):RecordPayload=
     result = record_counter
     inc record_counter
     return result
+
+proc remove_record*(record_pointer:pointer, record_payload:RecordPayload)=
+    # Forcefully removing a record. useful for cases like reallocation.
+    # but generally called after all memory safety checks have been passed.
+    let (flag, found_ix) = has_record(record_pointer, record_payload)
+    doAssert flag == true, "NOTE if you are doing, manual deallocation it is tricky for now to support that.. error may happen, try without manual deallocation first!"    
+    # reset this entry.
+    ref_count_arr[found_ix] = (record_pointer:nil, record_payload:0, ref_count:0)
