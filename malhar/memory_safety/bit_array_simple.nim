@@ -28,3 +28,15 @@ template getWordRem(array_t: ptr UncheckedArray[BitArrayScalar], idx_t:Natural):
     # to get the `bit` for a `word`, corresponding to given index.
     # for example: 64th index, would mean 0't bit. combined with word, 1 word and 0'th bit to look for!
     (idx_t mod (sizeof(BitArrayScalar) * 8))
+
+proc initBitArray*(n_indices:Natural):BitArray =
+    let n_words = ((n_indices - 1) div sizeof(BitArrayScalar)) + 1
+    
+    let capacity_in_bytes = (n_words * sizeof(BitArrayScalar)) div 8
+    result.n_indices = n_indices
+    result.data = cast[ptr UncheckedArray[BitArrayScalar]](c_malloc(capacity_in_bytes.csize_t))
+    result.capacity_in_bytes = capacity_in_bytes
+
+    # zeroing..
+    c_memset(result.data, 0, capacity_in_bytes.csize_t) # fill 0 at for each of the byte.
+    return result
