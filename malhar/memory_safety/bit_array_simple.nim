@@ -18,3 +18,13 @@ proc freeBitArray*(x:var BitArray)=
     doAssert not isNil(x.data)
     c_free(x.data)
     x.data = nil
+
+template getWordIdx(array_t: ptr UncheckedArray[BitArrayScalar], idx_t:Natural):Natural =
+    # Get the `WORD` where this idx_t would belong to.
+    # For example for a 64 bit system, 64th index would be in 2nd word. 
+    (idx_t div (sizeof(BitArrayScalar) * 8))
+
+template getWordRem(array_t: ptr UncheckedArray[BitArrayScalar], idx_t:Natural):Natural =
+    # to get the `bit` for a `word`, corresponding to given index.
+    # for example: 64th index, would mean 0't bit. combined with word, 1 word and 0'th bit to look for!
+    (idx_t mod (sizeof(BitArrayScalar) * 8))
