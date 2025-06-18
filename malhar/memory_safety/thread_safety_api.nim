@@ -47,3 +47,21 @@ proc prove_concurrent_write*(meta:var ThreadMetaData, write_thread_id:int, range
         else:
             meta.threadIds[idx] = write_thread_id
         meta.writeArray.set(idx) # always set to indicate at-least written once!
+
+proc prove_concurrent_read*(meta:var ThreadMetaData, read_thread_id:int, rangeBytes:Slice[Natural])=
+    # NOTE: It also updates the necessary meta-data if needs to..
+
+    # it proves either it is an independent read.
+    # or part of an isolated read/write..
+
+    for idx in rangeBytes.a .. rangeBytes.b:
+        if meta.writeArray.get(idx):
+            # already written , so thread ids must match..
+            doAssert read_thread_id == meta.threadIds[idx], "Tried to read from a different thread, when concurrently written from a different thread"
+    
+        # update
+        if meta.threadIds[idx] == -1: # first access to this byte in a concurrent environment!
+            meta.threadIds[idx] = read_thread_id
+        else:
+            if meta.threadIds[idx] != read_thread_id: # already read somewhere . (write from different thread is checked in first if block of this routine) 
+                meta.readMismatchArray.set(idx) # indicate atleast 2 different threads tried to read from it.
