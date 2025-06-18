@@ -10,3 +10,5 @@ type
         n_indices*:Natural # 1 bit for each index.
         capacity_in_bytes:Natural  # in bytes. (given n_indices.. we calculate capacity in bytes)
         data:ptr UncheckedArray[BitArrayScalar]
+
+proc `=copy`(a:var BitArray, b:BitArray) {.error.}  # only sink should be needed!
