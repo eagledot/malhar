@@ -40,3 +40,8 @@ proc initBitArray*(n_indices:Natural):BitArray =
     # zeroing..
     c_memset(result.data, 0, capacity_in_bytes.csize_t) # fill 0 at for each of the byte.
     return result
+
+proc resetBitArray*(x:var BitArray)=
+    doAssert not isNil(x.data)
+    # zeroing..
+    c_memset(x.data, 0, x.capacity_in_bytes.csize_t) # fill 0 at for each of the byte.
