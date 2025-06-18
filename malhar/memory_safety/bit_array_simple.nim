@@ -12,3 +12,9 @@ type
         data:ptr UncheckedArray[BitArrayScalar]
 
 proc `=copy`(a:var BitArray, b:BitArray) {.error.}  # only sink should be needed!
+
+proc freeBitArray*(x:var BitArray)=
+    # release underlying memory/resources if any back to the OS.
+    doAssert not isNil(x.data)
+    c_free(x.data)
+    x.data = nil
