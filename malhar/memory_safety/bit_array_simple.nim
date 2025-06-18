@@ -45,3 +45,10 @@ proc resetBitArray*(x:var BitArray)=
     doAssert not isNil(x.data)
     # zeroing..
     c_memset(x.data, 0, x.capacity_in_bytes.csize_t) # fill 0 at for each of the byte.
+
+proc set*(x:var BitArray, idx:Natural)=
+    doAssert idx < x.n_indices
+    let word_idx = getWordIdx(x.data, idx)
+    let rem = getWordRem(x.data, idx)
+    x.data[word_idx] = x.data[word_idx] or (1.BitArrayScalar shl rem)
+    
