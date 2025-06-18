@@ -30,3 +30,9 @@ proc resetThreadSafetyMetaData*(x: var ThreadMetaData)=
     doAssert not isNil(x.threadIds)
     for i in 0..<n_indices:
         x.thread_ids[i] = -1
+
+proc freeThreadMetaData*(x: var ThreadMetaData)=
+    c_free(x.threadIds)
+    freeBitArray(x.readMismatchArray)
+    freeBitArray(x.writeArray)
+    x.threadIds = nil
