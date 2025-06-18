@@ -24,3 +24,22 @@ proc has_record*(record_pointer:pointer, record_payload:RecordPayload):tuple[fla
             break
     result = (found_ix >= 0, found_ix)
     return result
+
+proc add_record*(record_pointer:pointer):RecordPayload=
+    # add a new ref count  pair after making sure no duplicate record pointer already exists!
+    var found_ix:int = -1
+    var flag:bool = true
+    for i in 0..<MAX_LIVE_RECORDS_COUNT:
+        if isNil(ref_count_arr[i].record_pointer):
+            if flag:
+                found_ix = i
+                flag = false
+        else:
+            # cannot exist two same record pointers at same time!
+            assert ref_count_arr[i].record_pointer != record_pointer
+
+    doAssert found_ix >= 0
+    ref_count_arr[found_ix] = (record_pointer:record_pointer, record_payload: record_counter, ref_count:1)
+    result = record_counter
+    inc record_counter
+    return result
