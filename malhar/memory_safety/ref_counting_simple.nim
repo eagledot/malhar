@@ -9,3 +9,7 @@ type
             record_pointer:pointer
             record_payload:RecordPayload
             ref_count:uint32   
+
+const MAX_LIVE_RECORDS_COUNT = 1024 # at one time it can support this number of allocations/records!
+var ref_count_arr*:array[MAX_LIVE_RECORDS_COUNT, RefCount] # put it on the stack.
+var record_counter:RecordPayload = 1
