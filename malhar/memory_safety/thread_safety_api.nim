@@ -36,3 +36,14 @@ proc freeThreadMetaData*(x: var ThreadMetaData)=
     freeBitArray(x.readMismatchArray)
     freeBitArray(x.writeArray)
     x.threadIds = nil
+
+proc prove_concurrent_write*(meta:var ThreadMetaData, write_thread_id:int, rangeBytes:Slice[Natural])=
+    # NOTE: it also updates necessary data..
+    
+    for idx in rangeBytes.a .. rangeBytes.b:
+        doAssert meta.readMismatchArray.get(idx) == false, "read happened from atleast 2 different threads.. cannot be synced with a writer without extra information"
+        if (meta.thread_ids[idx] != -1):
+            doAssert write_thread_id == meta.threadIds[idx]
+        else:
+            meta.threadIds[idx] = write_thread_id
+        meta.writeArray.set(idx) # always set to indicate at-least written once!
