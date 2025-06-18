@@ -59,3 +59,15 @@ proc inc_ref_count*(record_pointer:pointer, record_payload:RecordPayload)=
     let (flag, found_ix) = has_record(record_pointer,record_payload)
     doAssert flag == true
     inc ref_count_arr[found_ix].ref_count
+
+proc dec_ref_count*(record_pointer:pointer, record_payload:RecordPayload):Natural = 
+    # It makes sure a valid record_pointer, if memory safety checks pass.. then it must pass too.
+    # shouldn't be possible to pass a weird record pointer, if reference counting logic is sound.
+    when defined(debug):
+        echo fgYellow("\t[Info]: Ref counting decremented!")
+    let (flag, found_ix) = has_record(record_pointer, record_payload)
+    doAssert flag == true
+    doAssert ref_count_arr[found_ix].ref_count >= 1
+    dec ref_count_arr[found_ix].ref_count
+    let temp = ref_count_arr[found_ix].ref_count
+    return temp
