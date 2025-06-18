@@ -51,3 +51,11 @@ proc remove_record*(record_pointer:pointer, record_payload:RecordPayload)=
     doAssert flag == true, "NOTE if you are doing, manual deallocation it is tricky for now to support that.. error may happen, try without manual deallocation first!"    
     # reset this entry.
     ref_count_arr[found_ix] = (record_pointer:nil, record_payload:0, ref_count:0)
+
+proc inc_ref_count*(record_pointer:pointer, record_payload:RecordPayload)=
+    echo fgYellow("\t[Info]: Ref counting incremented!")
+    # It makes sure a valid record_pointer, if memory safety checks pass.. then it must pass too.
+    # shouldn't be possible to pass a weird record pointer, if reference counting logic is sound.
+    let (flag, found_ix) = has_record(record_pointer,record_payload)
+    doAssert flag == true
+    inc ref_count_arr[found_ix].ref_count
