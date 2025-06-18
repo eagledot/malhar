@@ -17,3 +17,16 @@ proc initThreadSafetyMetaData*(n_indices:Natural):ThreadMetaData=
     result.threadIds = cast[ptr UncheckedArray[int]](c_malloc((n_indices * sizeof(int)).csize_t)) 
     for i in 0..<n_indices:
         result.thread_ids[i] = -1
+
+proc resetThreadSafetyMetaData*(x: var ThreadMetaData)=
+    # Reset the thread-safety required meta-data .
+    # NOTE: It doesn't free, just reset to default values!
+    # generally done one complete cycle from single-threaded --> multi --> single again.
+    resetBitArray(x.readMismatchArray)
+    resetBitArray(x.writeArray)
+    doAssert x.writeArray.n_indices == x.readMismatchArray.n_indices
+
+    let n_indices = x.writeArray.n_indices
+    doAssert not isNil(x.threadIds)
+    for i in 0..<n_indices:
+        x.thread_ids[i] = -1
