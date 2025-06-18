@@ -51,4 +51,9 @@ proc set*(x:var BitArray, idx:Natural)=
     let word_idx = getWordIdx(x.data, idx)
     let rem = getWordRem(x.data, idx)
     x.data[word_idx] = x.data[word_idx] or (1.BitArrayScalar shl rem)
-    
+
+proc get*(x:var BitArray, idx:Natural):bool=
+    doAssert idx < x.n_indices
+    let word_idx = getWordIdx(x.data, idx)
+    let rem = getWordRem(x.data, idx)
+    return (x.data[word_idx] and (1.BitArrayScalar shl rem)) != 0 
